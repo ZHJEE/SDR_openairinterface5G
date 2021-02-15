@@ -1738,7 +1738,6 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   curMsg->proc = *proc;
   curMsg->UE = ue;
   pushTpool(&(get_nrUE_params()->Tpool), newElt);
-
   start_meas(&ue->generic_stat);
   // do procedures for C-RNTI
   int ret_pdsch = 0;
@@ -1865,9 +1864,7 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
 
  }
 
->>>>>>> fix dlsim dlsch parallelisation
 start_meas(&ue->generic_stat);
-
 
 #if 0
 
