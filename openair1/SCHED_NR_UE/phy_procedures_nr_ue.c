@@ -966,8 +966,7 @@ void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
 #endif
 
 
-   start_meas(&ue->dlsch_decoding_stats[proc->thread_id]);
-
+  start_meas(&ue->dlsch_decoding_stats[proc->thread_id]);
 
   if( dlsch_parallel)
     {
