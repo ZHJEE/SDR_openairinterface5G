@@ -966,7 +966,7 @@ void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
 #endif
 
 
-  start_meas(&ue->dlsch_decoding_stats[proc->thread_id]);
+      start_meas(&ue->dlsch_decoding_stats[proc->thread_id]);
 
   if( dlsch_parallel)
     {
@@ -1738,7 +1738,6 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   curMsg->proc = *proc;
   curMsg->UE = ue;
   pushTpool(&(get_nrUE_params()->Tpool), newElt);
-
 
   start_meas(&ue->generic_stat);
   // do procedures for C-RNTI
