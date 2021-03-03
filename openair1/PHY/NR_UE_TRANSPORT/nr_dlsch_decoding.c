@@ -247,11 +247,10 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
                            uint8_t llr8_flag)
 {
 
-#if UE_TIMING_TRACE
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
   time_stats_t *dlsch_turbo_decoding_stats=&phy_vars_ue->dlsch_turbo_decoding_stats;
   time_stats_t *dlsch_deinterleaving_stats=&phy_vars_ue->dlsch_deinterleaving_stats;
-#endif
+
   uint32_t A,E;
   uint32_t G;
   uint32_t ret,offset;
@@ -439,8 +438,6 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
     LOG_I(PHY,"Segmentation: C %d, K %d\n",harq_process->C,harq_process->K);
 
 
-  opp_enabled=1;
-
   Kr = harq_process->K; // [hna] overwrites this line "Kr = p_decParams->Z*kb"
   Kr_bytes = Kr>>3;
   K_bits_F = Kr-harq_process->F;
@@ -450,28 +447,16 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
     //printf("start rx segment %d\n",r);
     E = nr_get_E(G, harq_process->C, harq_process->Qm, harq_process->Nl, r);
 
-#if UE_TIMING_TRACE
     start_meas(dlsch_deinterleaving_stats);
-#endif
-
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_DEINTERLEAVING, VCD_FUNCTION_IN);
-
-
     nr_deinterleaving_ldpc(E,
                            harq_process->Qm,
                            harq_process->w[r], // [hna] w is e
                            dlsch_llr+r_offset);
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_DEINTERLEAVING, VCD_FUNCTION_OUT);
-
-
-#if UE_TIMING_TRACE
     stop_meas(dlsch_deinterleaving_stats);
-#endif
-
-#if UE_TIMING_TRACE
     start_meas(dlsch_rate_unmatching_stats);
-#endif
 
     LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,E %d, F %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
           harq_pid,r, G,E,harq_process->F,
@@ -505,16 +490,11 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
                                  harq_process->F,
                                  Kr-harq_process->F-2*(p_decParams->Z))==-1) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_RATE_MATCHING, VCD_FUNCTION_OUT);
-#if UE_TIMING_TRACE
-      stop_meas(dlsch_rate_unmatching_stats);
-#endif
-      LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
-      return(dlsch->max_ldpc_iterations + 1);
+    stop_meas(dlsch_rate_unmatching_stats);
+    LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
+    return(dlsch->max_ldpc_iterations + 1);
     } else {
-
-#if UE_TIMING_TRACE
-      stop_meas(dlsch_rate_unmatching_stats);
-#endif
+    stop_meas(dlsch_rate_unmatching_stats);
     }
 
     r_offset += E;
@@ -546,11 +526,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
     if (err_flag == 0) {
 
-#if UE_TIMING_TRACE
       start_meas(dlsch_turbo_decoding_stats);
-#endif
-
-
       //set first 2*Z_c bits to zeros
       memset(&z[0],0,2*harq_process->Z*sizeof(int16_t));
       //set Filler bits
@@ -607,11 +583,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
           LOG_D(PHY,"output decoder [%d] =  0x%02x \n", k, harq_process->c[r][k]);
         LOG_D(PHY,"no_iterations_ldpc %d (ret %u)\n",no_iteration_ldpc,ret);
         }
-
-
-#if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
-#endif
     }
     
 
@@ -721,11 +693,10 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
                                     uint8_t llr8_flag)
 {
 
-#if UE_TIMING_TRACE
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
   time_stats_t *dlsch_turbo_decoding_stats=&phy_vars_ue->dlsch_turbo_decoding_stats;
   time_stats_t *dlsch_deinterleaving_stats=&phy_vars_ue->dlsch_deinterleaving_stats;
-#endif
+
   uint32_t A,E;
   uint32_t G;
   uint32_t ret,offset;
@@ -911,7 +882,6 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
 
 
   notifiedFIFO_elt_t *res_dl;
-  opp_enabled=1;
   if (harq_process->C>1) {
 	for (int nb_seg =1 ; nb_seg<harq_process->C; nb_seg++){
 	  if ( (res_dl=tryPullTpool(&nf, &pool_dl)) != NULL ) {
@@ -972,9 +942,8 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
      dlsch_llr+r_offset,
      &harq_process->w[r]);
     */
-#if UE_TIMING_TRACE
+
     start_meas(dlsch_deinterleaving_stats);
-#endif
     nr_deinterleaving_ldpc(E,
                            harq_process->Qm,
                            harq_process->w[r],
@@ -983,14 +952,8 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
     if (LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD))
         for (int i =0; i<16; i++)
               LOG_D(PHY,"rx output deinterleaving w[%d]= %d r_offset %u\n", i,harq_process->w[r][i], r_offset);
-
-#if UE_TIMING_TRACE
     stop_meas(dlsch_deinterleaving_stats);
-#endif
-
-#if UE_TIMING_TRACE
     start_meas(dlsch_rate_unmatching_stats);
-#endif
 
   if (LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD))
     LOG_I(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
@@ -1022,16 +985,13 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
                                  E,
 				 harq_process->F,
 				 Kr-harq_process->F-2*(p_decParams->Z))==-1) {
-#if UE_TIMING_TRACE
+
       stop_meas(dlsch_rate_unmatching_stats);
-#endif
       LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
       return(dlsch->max_ldpc_iterations);
     } else
     {
-#if UE_TIMING_TRACE
       stop_meas(dlsch_rate_unmatching_stats);
-#endif
     }
 
  
@@ -1078,9 +1038,8 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
                             harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round,dlsch->max_ldpc_iterations);
 */
 
-#if UE_TIMING_TRACE
+
       start_meas(dlsch_turbo_decoding_stats);
-#endif
       LOG_D(PHY,"mthread AbsSubframe %d.%d Start LDPC segment %d/%d \n",frame%1024,nr_slot_rx,r,harq_process->C-1);
 
       /*for (int cnt =0; cnt < (kc-2)*p_decParams->Z; cnt++){
@@ -1153,10 +1112,7 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
        for (int k=0;k<32;k++)
          LOG_D(PHY,"output decoder [%d] =  0x%02x \n", k, harq_process->c[r][k]);
 
-
-#if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
-#endif
     }
 
 
@@ -1304,11 +1260,11 @@ void nr_dlsch_decoding_process(void *arg)
     proc->decoder_thread_available = 1;
     
 
-#if UE_TIMING_TRACE
+
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
   time_stats_t *dlsch_turbo_decoding_stats=&phy_vars_ue->dlsch_turbo_decoding_stats;
   time_stats_t *dlsch_deinterleaving_stats=&phy_vars_ue->dlsch_deinterleaving_stats;
-#endif
+
   uint32_t A,E;
   uint32_t G;
 
@@ -1415,8 +1371,7 @@ void nr_dlsch_decoding_process(void *arg)
   p_decParams->outMode= 0;
 
   err_flag = 0;
-
-  opp_enabled=1;
+;
   
   Qm= harq_process->Qm;
   Nl=harq_process->Nl;
@@ -1441,9 +1396,7 @@ void nr_dlsch_decoding_process(void *arg)
 
   E = nr_get_E(G, harq_process->C, harq_process->Qm, harq_process->Nl, r);
 
-#if UE_TIMING_TRACE
     start_meas(dlsch_deinterleaving_stats);
-#endif
     nr_deinterleaving_ldpc(E,
                            harq_process->Qm,
                            harq_process->w[r],
@@ -1452,15 +1405,8 @@ void nr_dlsch_decoding_process(void *arg)
   if (LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD))
     for (int i =0; i<16; i++)
               LOG_D(PHY,"rx output thread 0 deinterleaving w[%d]= %d r_offset %u\n", i,harq_process->w[r][i], r_offset);
-
-
-#if UE_TIMING_TRACE
-    stop_meas(dlsch_deinterleaving_stats);
-#endif
-
-#if UE_TIMING_TRACE
-    start_meas(dlsch_rate_unmatching_stats);
-#endif
+  stop_meas(dlsch_deinterleaving_stats);
+  start_meas(dlsch_rate_unmatching_stats);
 
   if (LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD))
     LOG_I(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
@@ -1491,16 +1437,12 @@ void nr_dlsch_decoding_process(void *arg)
                                  E,
 				 harq_process->F,
 				 Kr-harq_process->F-2*(p_decParams->Z))==-1) {
-#if UE_TIMING_TRACE
       stop_meas(dlsch_rate_unmatching_stats);
-#endif
       LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
       //return(dlsch->max_ldpc_iterations);
     } else
     {
-#if UE_TIMING_TRACE
       stop_meas(dlsch_rate_unmatching_stats);
-#endif
     }
 
     if (LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD)) {
@@ -1536,9 +1478,8 @@ void nr_dlsch_decoding_process(void *arg)
         AssertFatal (Kr >= 256, "LDPC algo issue Kr=%d cb_cnt=%d C=%d nbRB=%d TBSInput=%d TBSHarq=%d TBSplus24=%d mcs=%d Qm=%d RIV=%d round=%d\n",
             Kr,r,harq_process->C,harq_process->nb_rb,A,harq_process->TBS,harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round);
       }
-#if UE_TIMING_TRACE
-        start_meas(dlsch_turbo_decoding_stats);
-#endif
+      start_meas(dlsch_turbo_decoding_stats);
+
 //      LOG_D(PHY,"AbsSubframe %d.%d Start LDPC segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
 /*
         for (int cnt =0; cnt < (kc-2)*p_decParams->Z; cnt++){
@@ -1588,11 +1529,7 @@ void nr_dlsch_decoding_process(void *arg)
     if ( LOG_DEBUGFLAG(DEBUG_DLSCH_DECOD))       
       for (int k=0;k<2;k++)
         LOG_D(PHY,"segment 1 output decoder [%d] =  0x%02x \n", k, harq_process->c[r][k]);
-
-    
-#if UE_TIMING_TRACE
-      stop_meas(dlsch_turbo_decoding_stats);
-#endif
+    stop_meas(dlsch_turbo_decoding_stats);
     }
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_ldpc_iterations))) {// a Code segment is in error so break;

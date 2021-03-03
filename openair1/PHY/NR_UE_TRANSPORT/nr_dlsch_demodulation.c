@@ -159,9 +159,7 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
 //  int avg_0[2];
 //  int avg_1[2];
 
-#if UE_TIMING_TRACE
   uint8_t slot = 0;
-#endif
 
   unsigned char aatx=0,aarx=0;
 
@@ -329,12 +327,10 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
     DevAssert(dlsch1_harq);
   }
 
-#if UE_TIMING_TRACE
   if(symbol > ue->frame_parms.symbols_per_slot>>1)
   {
       slot = 1;
   }
-#endif
 
 #ifdef DEBUG_HARQ
   printf("Demod  dlsch0_harq->pmi_alloc %d\n",  dlsch0_harq->pmi_alloc);
@@ -344,9 +340,7 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
   config_type = dlsch0_harq->dmrsConfigType;
 
   if (beamforming_mode==0) {//No beamforming
-#if UE_TIMING_TRACE
     start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
     if (dlsch0_harq->Nl > 1)//More than or equal 2 layers
       nb_rb = nr_dlsch_extract_rbs_multiple(common_vars->common_vars_rx_data_per_thread[proc->thread_id].rxdataF,
                                             pdsch_vars[gNB_id]->dl_ch_estimates,
@@ -387,7 +381,6 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
 
   len = (pilots==1)? ((config_type==pdsch_dmrs_type1)?nb_rb*(12-6*dlsch0_harq->n_dmrs_cdm_groups): nb_rb*(12-4*dlsch0_harq->n_dmrs_cdm_groups)):(nb_rb*12);
 
-#if UE_TIMING_TRACE
   stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
   printf("[AbsSFN %u.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction %5.2f \n",
@@ -396,11 +389,8 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
   LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction %5.2f \n",
 	frame,nr_slot_rx,slot,symbol,ue->high_speed_flag,type,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #endif
-#endif
   
-#if UE_TIMING_TRACE
   start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
   n_tx = dlsch0_harq->Nl;
   n_rx = frame_parms->nb_antennas_rx;
   
@@ -414,18 +404,13 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
                          len,
                          nb_rb);
 
-#if UE_TIMING_TRACE
     stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %u.%d] Slot%d Symbol %d: Channel Scale %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d: Channel Scale  %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #endif
-#endif
-
-#if UE_TIMING_TRACE
     start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
   if (first_symbol_flag==1) {
     if (beamforming_mode==0){
       nr_dlsch_channel_level(pdsch_vars[gNB_id]->dl_ch_estimates_ext,
@@ -480,19 +465,14 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
     }
 #endif
 
-#if UE_TIMING_TRACE
     stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %u.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level %5.2f \n",frame,nr_slot_rx,slot,symbol,first_symbol_flag,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level  %5.2f \n",frame,nr_slot_rx,slot,symbol,first_symbol_flag,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #endif
-#endif
 
-
-#if UE_TIMING_TRACE
     start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
 // Now channel compensation
   if (dlsch0_harq->mimo_mode<NR_DUALSTREAM) {
     nr_dlsch_channel_compensation(pdsch_vars[gNB_id]->rxdataF_ext,
@@ -537,18 +517,13 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
                                           0);
   }
 
-#if UE_TIMING_TRACE
     stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %u.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp %5.2f \n", frame, nr_slot_rx, slot, symbol, pdsch_vars[gNB_id]->log2_maxh, proc->channel_level, ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp  %5.2f \n", frame, nr_slot_rx, slot, symbol, pdsch_vars[gNB_id]->log2_maxh, proc->channel_level, ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #endif
-#endif
-// MRC
-#if UE_TIMING_TRACE
     start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
 
   if (frame_parms->nb_antennas_rx > 1) {
     if (dlsch0_harq->mimo_mode<NR_DUALSTREAM) {
@@ -597,19 +572,13 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
     //i_mod should have been passed as a parameter
   }
   
-#if UE_TIMING_TRACE
     stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %u.%d] Slot%d Symbol %d: Channel Combine %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d: Channel Combine  %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #endif
-#endif
-
-#if UE_TIMING_TRACE
-
     start_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
-#endif
   /* Store the valid DL RE's */
     pdsch_vars[gNB_id]->dl_valid_re[symbol-1] = len;
 
@@ -674,13 +643,11 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
                                pdsch_vars[gNB_id]->layer_llr);
     }
 
-#if UE_TIMING_TRACE
     stop_meas(&ue->generic_stat_bis[proc->thread_id][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %u.%d] Slot%d Symbol %d: LLR Computation %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %u.%d] Slot%d Symbol %d: LLR Computation  %5.2f \n",frame,nr_slot_rx,slot,symbol,ue->generic_stat_bis[proc->thread_id][slot].p_time/(cpuf*1000.0));
-#endif
 #endif
 
 // Please keep it: useful for debugging
