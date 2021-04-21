@@ -1666,7 +1666,6 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   for (uint16_t l=0; l<nb_symb_pdcch; l++) {
 
     start_meas(&ue->ofdm_demod_stats);
-#endif
     nr_slot_fep(ue,
                 proc,
                 l,
